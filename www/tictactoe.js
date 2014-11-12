@@ -1,10 +1,3 @@
-// http://www.reddit.com/r/javascript/comments/2ikxz9/livecoding_a_javascript_game_from_scratch_in/
-// http://diveintohtml5.info/canvas.html
-// https://en.wikipedia.org/wiki/Canvas_element
-// https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API
-//
-// file:///C:/projects/tictactoe/index.html
-
 var canvas = document.getElementById("canvas");
 var context = canvas.getContext("2d");
 
@@ -178,7 +171,7 @@ Board.prototype = {
     }
 };
 
-var game = new Board(2);
+var game = new Board(3);
 
 game.draw();
 

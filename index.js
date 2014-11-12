@@ -1,15 +1,11 @@
-var app = require('express')();
+var express = require('express');
+var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
 var assignments = ["X", "O"];
 
-app.get('/', function(req, res){
-    res.sendFile(__dirname + '/index.html');
-});
-app.get('/tictactoe.js', function(req, res){
-    res.sendFile(__dirname + '/tictactoe.js');
-});
+app.use(express.static('www'));
 
 io.on('connection', function(socket){
     console.log('connect');
