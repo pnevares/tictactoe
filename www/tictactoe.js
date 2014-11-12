@@ -183,21 +183,3 @@ canvas.addEventListener("click", function(e) {
         game.calculateInput(event.layerX, event.layerY);
     }
 });
-
-function grid() {
-    context.beginPath();
-    for(var x=0; x<=canvas.width; x+=20) {
-        context.moveTo(x, 0);
-        context.lineTo(x, canvas.height);
-    }
-
-    for(var y=0; y<=canvas.height; y+=20) {
-        context.moveTo(0, y);
-        context.lineTo(canvas.width, y);
-    }
-
-    context.strokeStyle = "#ccc";
-    context.stroke();
-}
-
-// grid();

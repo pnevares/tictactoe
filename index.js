@@ -11,12 +11,14 @@ io.on('connection', function(socket){
     console.log('connect');
 
     socket.on('ready', function() {
-        if(socket.assignment == undefined && assignments.length) {
-            socket.assignment = assignments.shift(0,1);
-            console.log('assignment (' + socket.assignment + ')');
-            socket.emit('assignment', {symbol:socket.assignment});
-        } else if(socket.assignment == undefined) {
-            socket.emit('fail', {message: "no assignments left"});
+        if (socket.assignment == undefined) {
+            if (assignments.length) {
+                socket.assignment = assignments.shift();
+                console.log('assignment (' + socket.assignment + ')');
+                socket.emit('assignment', {symbol: socket.assignment});
+            } else {
+                socket.emit('fail', {message: "no assignments left"});
+            }
         }
     });
 
