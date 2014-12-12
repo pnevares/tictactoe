@@ -1,6 +1,7 @@
 var canvas = document.getElementById("canvas");
 var context = canvas.getContext("2d");
 var game;
+var log = document.getElementById("log");
 
 var Board = function(depth) {
     if(depth<2) {
@@ -138,40 +139,54 @@ Board.prototype = {
 
             if(column == xWin) {
                 this.markWin(c,c+this.depth*(this.depth-1));
-                console.log("X wins");
+                logMessage("GAME", "X wins");
             } else if(column == oWin) {
                 this.markWin(c,c+this.depth*(this.depth-1));
-                console.log("O wins");
+                logMessage("GAME", "O wins");
             } else if(row == xWin) {
                 this.markWin(c*this.depth, c*this.depth+this.depth-1);
-                console.log("X wins");
+                logMessage("GAME", "X wins");
             } else if(row == oWin) {
                 this.markWin(c*this.depth, c*this.depth+this.depth-1);
-                console.log("O wins");
+                logMessage("GAME", "O wins");
             }
         }
     }
 };
 
 function init() {
-  if(socket) {
-    socket.on('depth', function(msg) {
-      game = new Board(msg.depth);
+    if(socket) {
+        socket.on('depth', function(msg) {
+            game = new Board(msg.depth);
 
-      game.draw();
+            game.draw();
 
-      // translate canvas clicks to x/y coords
-      canvas.addEventListener("click", function(e) {
-        if (event.offsetX !== undefined && event.offsetY !== undefined) {
-          game.calculateInput(event.offsetX, event.offsetY);
-        } else {
-          game.calculateInput(event.layerX, event.layerY);
-        }
-      });
-    });
+            // translate canvas clicks to x/y coords
+            canvas.addEventListener("click", function(e) {
+                if (event.offsetX !== undefined && event.offsetY !== undefined) {
+                    game.calculateInput(event.offsetX, event.offsetY);
+                } else {
+                    game.calculateInput(event.layerX, event.layerY);
+                }
+            });
+        });
 
-    socket.emit('getDepth');
-  }
+        socket.emit('getDepth');
+    }
 }
 
 init();
+
+function logMessage(source, message) {
+    var li = document.createElement("li");
+    var span = document.createElement("span");
+
+    span.className = "source";
+    span.appendChild(document.createTextNode(source));
+
+    li.appendChild(span);
+    li.innerHTML += message;
+
+    log.appendChild(li);
+    log.scrollTop = log.scrollHeight; // better ways to do this
+}
