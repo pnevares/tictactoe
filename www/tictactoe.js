@@ -1,5 +1,6 @@
 var canvas = document.getElementById("canvas");
 var context = canvas.getContext("2d");
+var game;
 
 var Board = function(depth) {
     if(depth<2) {
@@ -11,25 +12,6 @@ var Board = function(depth) {
     this.gameEnd = false;
     this.locations = new Array(depth);
     this.connected = false;
-
-    // multiplayer listeners
-    var that = this;
-    if(socket) {
-        socket.on('move', function(msg) {
-            that.playMove(msg.mark, msg.location);
-        });
-
-        socket.on('assignment', function(msg) {
-            that.connect(msg.symbol);
-        });
-
-        socket.on('fail', function(msg) {
-            alert('Error?');
-            console.log(msg);
-        });
-
-        socket.emit('ready');
-    }
 };
 
 Board.prototype = {
@@ -171,15 +153,25 @@ Board.prototype = {
     }
 };
 
-var game = new Board(3);
+function init() {
+  if(socket) {
+    socket.on('depth', function(msg) {
+      game = new Board(msg.depth);
 
-game.draw();
+      game.draw();
 
-// translate canvas clicks to x/y coords
-canvas.addEventListener("click", function(e) {
-    if (event.offsetX !== undefined && event.offsetY !== undefined) {
-        game.calculateInput(event.offsetX, event.offsetY);
-    } else {
-        game.calculateInput(event.layerX, event.layerY);
-    }
-});
+      // translate canvas clicks to x/y coords
+      canvas.addEventListener("click", function(e) {
+        if (event.offsetX !== undefined && event.offsetY !== undefined) {
+          game.calculateInput(event.offsetX, event.offsetY);
+        } else {
+          game.calculateInput(event.layerX, event.layerY);
+        }
+      });
+    });
+
+    socket.emit('getDepth');
+  }
+}
+
+init();
