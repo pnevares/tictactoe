@@ -76,6 +76,8 @@ Board.prototype = {
             var yStart = this.blockHeight / 2 + yOffset;
             var radius = this.blockHeight / 3;
 
+            context.lineWidth = 1;
+
             context.beginPath();
             context.arc(xStart, yStart, radius, 0, Math.PI * 2, false);
             context.closePath();
