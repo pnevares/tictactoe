@@ -9,10 +9,10 @@ var Board = function(depth, firstSymbol) {
     }
 
     this.depth = depth;
-    this.nextMove = this.firstSymbol = firstSymbol;
-    this.gameEnd = false;
-    this.locations = new Array(depth);
     this.connected = false;
+    this.firstSymbol = firstSymbol;
+
+    this.reset();
 
     // multiplayer listeners
     var that = this;
@@ -38,7 +38,7 @@ Board.prototype = {
     reset: function() {
         this.nextMove = this.firstSymbol;
         this.gameEnd = false;
-        this.locations = new Array(this.depth);
+        this.locations = new Array(this.depth*this.depth);
 
         // reset canvas
         canvas.width = canvas.width;
@@ -46,10 +46,9 @@ Board.prototype = {
         this.draw();
     },
     connect: function(symbol) {
-        if(symbol == "X" || symbol == "O") {
-            this.connected = true;
-            this.symbol = symbol;
-        }
+        this.connected = true;
+        this.symbol = symbol;
+        logMessage("GAME", "Your assignment is " + symbol);
     },
     draw: function() {
         this.blockWidth = canvas.width / this.depth;
@@ -115,6 +114,7 @@ Board.prototype = {
             var location = parseInt(x / this.blockWidth) + this.depth * parseInt(y / this.blockHeight);
             this.playMove(this.nextMove, location);
         }
+        console.log(location);
     },
     line: function(x1, y1, x2, y2, color, width, cap) {
         context.strokeStyle = color;
@@ -178,24 +178,19 @@ Board.prototype = {
 function init() {
     if(socket) {
         socket.on('config', function(msg) {
-            console.log("config");
-            console.log(msg);
             game = new Board(msg.depth, msg.firstSymbol);
-
-            game.draw();
-
-            // translate canvas clicks to x/y coords
-            canvas.addEventListener("click", function(e) {
-                if (event.offsetX !== undefined && event.offsetY !== undefined) {
-                    game.calculateInput(event.offsetX, event.offsetY);
-                } else {
-                    game.calculateInput(event.layerX, event.layerY);
-                }
-            });
         });
-
         socket.emit('getConfig');
     }
+
+    // translate canvas clicks to x/y coords
+    canvas.addEventListener("click", function(e) {
+        if (event.offsetX !== undefined && event.offsetY !== undefined) {
+            game.calculateInput(event.offsetX, event.offsetY);
+        } else {
+            game.calculateInput(event.layerX, event.layerY);
+        }
+    });
 }
 
 init();

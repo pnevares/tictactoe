@@ -11,10 +11,10 @@ var firstSymbol = config.symbols[0];
 app.use(express.static('www'));
 
 io.on('connection', function(socket){
-    console.log('connect');
+    console.log('new connection');
 
     socket.on('getConfig', function() {
-      console.log('received getConfig');
+      console.log('getConfig recv');
       socket.emit('config', {depth: depth, firstSymbol: firstSymbol});
     });
 
@@ -22,7 +22,7 @@ io.on('connection', function(socket){
         if (socket.assignment == undefined) {
             if (symbols.length) {
                 socket.assignment = symbols.shift();
-                console.log('assignment (' + socket.assignment + ')');
+                console.log('assigned ' + socket.assignment);
                 socket.emit('assignment', {symbol: socket.assignment});
             } else {
                 socket.emit('fail', {message: "no symbols left"});
