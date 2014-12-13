@@ -13,17 +13,16 @@ app.use(express.static('www'));
 io.on('connection', function(socket){
     console.log('new connection');
 
-    socket.on('getConfig', function() {
-      console.log('getConfig recv');
-      socket.emit('config', {depth: depth, firstSymbol: firstSymbol});
-    });
-
     socket.on('ready', function() {
         if (socket.assignment == undefined) {
             if (symbols.length) {
                 socket.assignment = symbols.shift();
                 console.log('assigned ' + socket.assignment);
-                socket.emit('assignment', {symbol: socket.assignment});
+                socket.emit('config', {
+                    depth: depth,
+                    firstSymbol: firstSymbol,
+                    symbol: socket.assignment
+                });
             } else {
                 socket.emit('fail', {message: "no symbols left"});
             }
@@ -35,7 +34,6 @@ io.on('connection', function(socket){
             console.log('unassign (' + socket.assignment + ')');
             symbols.push(socket.assignment);
         }
-        console.log('*** disconnect');
     });
 
     socket.on('move', function(msg){

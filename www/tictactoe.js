@@ -2,17 +2,17 @@ var canvas = document.getElementById("canvas");
 var context = canvas.getContext("2d");
 var game;
 var log = document.getElementById("log");
+var autoplay = {on: false, delay: 1000};
 
-var Board = function(depth, firstSymbol) {
+var Board = function(depth, firstSymbol, symbol) {
     if(depth<2) {
         return;
     }
 
     this.depth = depth;
-    this.connected = false;
+    this.symbol = symbol;
+    this.connected = true;
     this.firstSymbol = firstSymbol;
-
-    this.reset();
 
     // multiplayer listeners
     var that = this;
@@ -21,34 +21,43 @@ var Board = function(depth, firstSymbol) {
             that.playMove(msg.mark, msg.location);
         });
 
-        socket.on('assignment', function(msg) {
-            that.connect(msg.symbol);
-        });
-
         socket.on('fail', function(msg) {
             alert('Error?');
             console.log(msg);
         });
-
-        socket.emit('ready');
     }
+
+    this.gameStart();
 };
 
 Board.prototype = {
     reset: function() {
         this.nextMove = this.firstSymbol;
         this.gameEnd = false;
-        this.locations = new Array(this.depth*this.depth);
+        this.locations = new Object();
 
         // reset canvas
         canvas.width = canvas.width;
 
         this.draw();
     },
-    connect: function(symbol) {
-        this.connected = true;
-        this.symbol = symbol;
-        logMessage("GAME", "Your assignment is " + symbol);
+    gameStart: function() {
+        this.reset();
+        logMessage("GAME", "Your assignment is " + this.symbol);
+        if(autoplay.on) {
+            this.autoplay();
+        }
+    },
+    autoplay: function() {
+        var that = this;
+        window.setInterval(function() {
+            var empties = new Array();
+            for(var i=0;i<that.depth*that.depth;i++) {
+                if(that.locations[i] === undefined)
+                    empties.push(i);
+            }
+            that.playMove(that.symbol, empties[Math.floor(Math.random() * empties.length)]);
+        }, autoplay.delay);
     },
     draw: function() {
         this.blockWidth = canvas.width / this.depth;
@@ -97,7 +106,9 @@ Board.prototype = {
         this.checkWinConditions();
     },
     playMove: function(mark, location) {
-        if(this.locations[location] === undefined) {
+        // if the game's not done, and the location's not taken
+        // TODO: move to the server to enforce turn order
+        if(!this.gameEnd && this.locations[location] === undefined) {
             this.locations[location] = this.nextMove;
 
             game.drawMove(mark, location);
@@ -109,12 +120,12 @@ Board.prototype = {
         }
     },
     calculateInput: function(x, y) {
-        // if the game's not done, and we're either not connected or it's our turn
-        if(!this.gameEnd && (!this.connected || this.nextMove == this.symbol)) {
+        // if we're either not connected or it's our turn
+        // TODO: move to the server to enforce turn order
+        if(!this.connected || this.nextMove == this.symbol) {
             var location = parseInt(x / this.blockWidth) + this.depth * parseInt(y / this.blockHeight);
             this.playMove(this.nextMove, location);
         }
-        console.log(location);
     },
     line: function(x1, y1, x2, y2, color, width, cap) {
         context.strokeStyle = color;
@@ -178,9 +189,9 @@ Board.prototype = {
 function init() {
     if(socket) {
         socket.on('config', function(msg) {
-            game = new Board(msg.depth, msg.firstSymbol);
+            game = new Board(msg.depth, msg.firstSymbol, msg.symbol);
         });
-        socket.emit('getConfig');
+        socket.emit('ready');
     }
 
     // translate canvas clicks to x/y coords
