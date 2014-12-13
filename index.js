@@ -2,28 +2,30 @@ var express = require('express');
 var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+var config = require('./config');
 
-var assignments = ["X", "O"];
-var depth = process.argv.slice(2)[0] || 3;
+var depth = config.depth;
+var symbols = config.symbols;
+var firstSymbol = config.symbols[0];
 
 app.use(express.static('www'));
 
 io.on('connection', function(socket){
     console.log('connect');
 
-    socket.on('getDepth', function() {
-      console.log('received getDepth');
-      socket.emit('depth', {depth: depth});
+    socket.on('getConfig', function() {
+      console.log('received getConfig');
+      socket.emit('config', {depth: depth, firstSymbol: firstSymbol});
     });
 
     socket.on('ready', function() {
         if (socket.assignment == undefined) {
-            if (assignments.length) {
-                socket.assignment = assignments.shift();
+            if (symbols.length) {
+                socket.assignment = symbols.shift();
                 console.log('assignment (' + socket.assignment + ')');
                 socket.emit('assignment', {symbol: socket.assignment});
             } else {
-                socket.emit('fail', {message: "no assignments left"});
+                socket.emit('fail', {message: "no symbols left"});
             }
         }
     });
@@ -31,7 +33,7 @@ io.on('connection', function(socket){
     socket.on('disconnect', function(){
         if(socket.assignment != undefined) {
             console.log('unassign (' + socket.assignment + ')');
-            assignments.push(socket.assignment);
+            symbols.push(socket.assignment);
         }
         console.log('*** disconnect');
     });

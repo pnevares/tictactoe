@@ -3,21 +3,40 @@ var context = canvas.getContext("2d");
 var game;
 var log = document.getElementById("log");
 
-var Board = function(depth) {
+var Board = function(depth, firstSymbol) {
     if(depth<2) {
         return;
     }
 
     this.depth = depth;
-    this.nextMove = "X";
+    this.nextMove = this.firstSymbol = firstSymbol;
     this.gameEnd = false;
     this.locations = new Array(depth);
     this.connected = false;
+
+    // multiplayer listeners
+    var that = this;
+    if(socket) {
+        socket.on('move', function(msg) {
+            that.playMove(msg.mark, msg.location);
+        });
+
+        socket.on('assignment', function(msg) {
+            that.connect(msg.symbol);
+        });
+
+        socket.on('fail', function(msg) {
+            alert('Error?');
+            console.log(msg);
+        });
+
+        socket.emit('ready');
+    }
 };
 
 Board.prototype = {
     reset: function() {
-        this.nextMove = "X";
+        this.nextMove = this.firstSymbol;
         this.gameEnd = false;
         this.locations = new Array(this.depth);
 
@@ -156,8 +175,10 @@ Board.prototype = {
 
 function init() {
     if(socket) {
-        socket.on('depth', function(msg) {
-            game = new Board(msg.depth);
+        socket.on('config', function(msg) {
+            console.log("config");
+            console.log(msg);
+            game = new Board(msg.depth, msg.firstSymbol);
 
             game.draw();
 
@@ -171,7 +192,7 @@ function init() {
             });
         });
 
-        socket.emit('getDepth');
+        socket.emit('getConfig');
     }
 }
 
